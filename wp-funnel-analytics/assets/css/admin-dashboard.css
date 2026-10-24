@@ -1,21 +1,21 @@
 /**
  * WP Funnel Analytics - Modern SaaS Dashboard CSS
- * High-End UI, Fluid Layout, Crisp Typography, Smooth Canvas Support
+ * Fluid Layout, High-Distinction Multi-Metrics, SVG Chart Engine
  */
 
 :root {
-    --wpfa-primary: #3b82f6;
-    --wpfa-primary-hover: #2563eb;
-    --wpfa-success: #10b981;
+    --wpfa-primary: #2563eb;
+    --wpfa-primary-hover: #1d4ed8;
+    --wpfa-success: #059669;
     --wpfa-warning: #f59e0b;
     --wpfa-danger: #ef4444;
-    --wpfa-purple: #8b5cf6;
+    --wpfa-purple: #7c3aed;
     --wpfa-bg-card: #ffffff;
     --wpfa-border: #e2e8f0;
     --wpfa-text-main: #0f172a;
     --wpfa-text-muted: #64748b;
     --wpfa-radius: 12px;
-    --wpfa-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --wpfa-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
     --wpfa-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
 }
 
@@ -66,12 +66,11 @@
     display: inline-block;
     font-size: 11px;
     font-weight: 600;
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #059669, #047857);
     color: #ffffff;
     padding: 2px 8px;
     border-radius: 9999px;
     vertical-align: middle;
-    letter-spacing: 0.3px;
 }
 
 .wpfa-subtitle {
@@ -104,14 +103,14 @@
     height: 8px;
     background-color: var(--wpfa-success);
     border-radius: 50%;
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7);
     animation: wpfa-pulse 2s infinite;
 }
 
 @keyframes wpfa-pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(5, 150, 105, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
 }
 
 .wpfa-realtime-label {
@@ -294,8 +293,8 @@
     font-size: 12px;
 }
 
-.trend-up { color: #10b981; }
-.trend-down { color: #ef4444; }
+.trend-up { color: #059669; }
+.trend-down { color: #dc2626; }
 .trend-neutral { color: #64748b; }
 
 /* 通用面板 Panel */
@@ -457,11 +456,11 @@
     transition: width 0.4s ease;
 }
 
-.step-fill-1 { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-.step-fill-2 { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
-.step-fill-3 { background: linear-gradient(90deg, #ec4899, #f472b6); }
-.step-fill-4 { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.step-fill-5 { background: linear-gradient(90deg, #10b981, #34d399); }
+.step-fill-1 { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+.step-fill-2 { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+.step-fill-3 { background: linear-gradient(90deg, #db2777, #f472b6); }
+.step-fill-4 { background: linear-gradient(90deg, #d97706, #fbbf24); }
+.step-fill-5 { background: linear-gradient(90deg, #059669, #34d399); }
 
 .wpfa-funnel-meta {
     font-size: 11px;
@@ -506,30 +505,73 @@
     margin-top: 1px;
 }
 
-/* 趋势图面板与全宽 Canvas 渲染核心 */
-.wpfa-panel-trend {
-    overflow: visible;
+/* 趋势图操作区 */
+.wpfa-chart-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
 }
 
+/* 图表类型切换按钮组 */
+.wpfa-view-toggle {
+    display: flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.wpfa-toggle-btn {
+    border: none;
+    background: transparent;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+
+.wpfa-toggle-btn .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.wpfa-toggle-btn.active {
+    background: #ffffff;
+    color: var(--wpfa-primary);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 指标胶囊图例与形状标记 */
 .wpfa-chart-legend {
     display: flex;
     gap: 8px;
     align-items: center;
+    flex-wrap: wrap;
 }
 
 .wpfa-legend-btn {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     border: 1px solid #e2e8f0;
     background: #ffffff;
-    padding: 4px 10px;
-    border-radius: 6px;
+    padding: 5px 12px;
+    border-radius: 8px;
     font-size: 12px;
     font-weight: 500;
-    color: #475569;
+    color: #334155;
     cursor: pointer;
     transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
 .wpfa-legend-btn:hover {
@@ -537,47 +579,68 @@
     background: #f8fafc;
 }
 
-.wpfa-legend-btn i {
+/* 形状标记 1: 蓝色圆点 */
+.wpfa-marker-circle {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #2563eb;
+    display: inline-block;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* 形状标记 2: 绿色菱形 */
+.wpfa-marker-diamond {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
+    background: #059669;
+    display: inline-block;
+    transform: rotate(45deg);
+    box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.2);
+}
+
+/* 形状标记 3: 紫色虚线条 */
+.wpfa-marker-dashed {
+    width: 12px;
+    height: 4px;
+    border-top: 2px dashed #7c3aed;
     display: inline-block;
 }
 
-.wpfa-legend-btn strong {
-    font-size: 11px;
+.wpfa-legend-val {
+    font-size: 12px;
     color: #0f172a;
-    margin-left: 2px;
+    font-weight: 700;
     font-variant-numeric: tabular-nums;
+    margin-left: 2px;
 }
 
 .wpfa-legend-btn:not(.active) {
-    opacity: 0.45;
+    opacity: 0.4;
     background: #f8fafc;
     border-style: dashed;
 }
 
-.wpfa-legend-btn:not(.active) span,
-.wpfa-legend-btn:not(.active) strong {
+.wpfa-legend-btn:not(.active) .wpfa-legend-text,
+.wpfa-legend-btn:not(.active) .wpfa-legend-val {
     text-decoration: line-through;
 }
 
-/* 彻底解决 300px 限制的 Canvas 容器 */
-.wpfa-canvas-wrapper {
+/* 彻底全宽自适应的 SVG 图表容器 */
+.wpfa-svg-chart-container {
     position: relative;
     width: 100% !important;
-    height: 300px !important;
-    min-height: 300px;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+    height: 320px !important;
+    display: block;
     cursor: crosshair;
+    user-select: none;
 }
 
-#wpfa-trend-canvas {
-    display: block;
+.wpfa-trend-svg {
     width: 100% !important;
-    height: 300px !important;
+    height: 100% !important;
+    display: block;
+    overflow: visible;
 }
 
 /* 悬浮交互 Tooltip */
@@ -586,19 +649,18 @@
     position: absolute;
     background: #ffffff;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
     border-radius: 8px;
     padding: 10px 14px;
     font-size: 12px;
     z-index: 50;
     pointer-events: none;
     white-space: nowrap;
-    transition: left 0.06s ease-out, top 0.06s ease-out;
 }
 
 .wpfa-tt-head {
     font-weight: 700;
-    color: #1e293b;
+    color: #0f172a;
     border-bottom: 1px solid #f1f5f9;
     padding-bottom: 6px;
     margin-bottom: 6px;
@@ -619,7 +681,6 @@
 .wpfa-tt-dot {
     width: 8px;
     height: 8px;
-    border-radius: 50%;
     display: inline-block;
 }
 

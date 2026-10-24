@@ -3,7 +3,7 @@
  * Plugin Name: WordPress 智能极速数据漏斗与全景分析系统
  * Plugin URI: https://github.com/wuyou2001/wp-funnel-analytics
  * Description: 专为 WordPress 与 WooCommerce 打造的超轻量级全景数据分析与全链路转化漏斗系统。包含 PV/UV/会话/跳出率/停留时长、多维电商与询盘漏斗、来源归因与 UTM 营销追踪、受众终端画像与实时在线大屏。纯原生无依赖设计，极致优化加载速度，不拖慢网站。
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Wwnine
  * Author URI: https://github.com/wuyou2001
  * Text Domain: wp-funnel-analytics

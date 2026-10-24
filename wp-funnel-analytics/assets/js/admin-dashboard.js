@@ -1,12 +1,13 @@
 /**
- * WP Funnel Analytics - Admin Dashboard & Pure Canvas Chart Engine
- * Zero Dependency, Ultra-Smooth Modern SaaS Interface
+ * WP Funnel Analytics - Admin Dashboard & SVG Chart Engine
+ * Zero Dependency, Ultra-Smooth Modern SaaS Interface, High-Distinction Multi-Metrics
  */
 (function($) {
     'use strict';
 
     var currentRange = '7d';
     var currentFunnelId = 0;
+    var currentChartType = 'line'; // 'line' 或 'bar'
     var realtimeTimer = null;
     var lastTimelineData = null;
     var activeMetrics = {
@@ -17,7 +18,7 @@
     var hoveredIndex = -1;
 
     $(document).ready(function() {
-        if ($('#wpfa-trend-canvas').length > 0) {
+        if ($('#wpfa-trend-svg').length > 0) {
             initDashboard();
         }
 
@@ -44,7 +45,6 @@
             $(this).addClass('active');
             currentRange = $(this).data('range');
 
-            // 同步更新导出链接
             var exportBtn = $('#wpfa-export-csv-btn');
             var href = exportBtn.attr('href');
             if (href) {
@@ -60,26 +60,25 @@
             loadDashboardData();
         });
 
-        // 窗口 Resize 响应式重绘 (防抖)
-        var resizeTimer;
-        $(window).on('resize', function() {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                if (lastTimelineData) {
-                    renderTimelineChart(lastTimelineData);
-                }
-            }, 100);
+        // 图表类型切换 (折线 / 柱状)
+        $('.wpfa-toggle-btn').on('click', function() {
+            $('.wpfa-toggle-btn').removeClass('active');
+            $(this).addClass('active');
+            currentChartType = $(this).data('chart-type');
+            if (lastTimelineData) {
+                renderTimelineChart(lastTimelineData);
+            }
         });
 
-        // 启动实时活跃访客轻量轮询 (15s 一次)
+        // 启动实时活跃访客轻量轮询
         startRealtimePoll();
     }
 
     /**
-     * 图例切换与鼠标交互初始化
+     * 图表交互与 Tooltip 挂载
      */
     function initChartInteractions() {
-        // 图例点击切换指标
+        // 指标图例点击显隐
         $('#wpfa-chart-legend').on('click', '.wpfa-legend-btn', function() {
             var metric = $(this).data('metric');
             activeMetrics[metric] = !activeMetrics[metric];
@@ -95,73 +94,75 @@
             }
         });
 
-        // 鼠标移动到画布显示悬浮 Tooltip 和导向线
-        var wrapper = $('#wpfa-canvas-wrapper');
-        var canvas = document.getElementById('wpfa-trend-canvas');
+        // 鼠标在 SVG 区域移动触发悬浮交互
+        var container = $('#wpfa-svg-chart-container');
         var tooltip = $('#wpfa-chart-tooltip');
 
-        if (canvas) {
-            wrapper.on('mousemove', function(e) {
-                if (!lastTimelineData || !lastTimelineData.labels || lastTimelineData.labels.length === 0) return;
+        container.on('mousemove', function(e) {
+            if (!lastTimelineData || !lastTimelineData.labels || lastTimelineData.labels.length === 0) return;
 
-                var rect = canvas.getBoundingClientRect();
-                var mouseX = e.clientX - rect.left;
-                var mouseY = e.clientY - rect.top;
+            var offset = container.offset();
+            var width = container.width();
+            var height = container.height();
+            var mouseX = e.pageX - offset.left;
+            var mouseY = e.pageY - offset.top;
 
-                var paddingLeft = 50;
-                var paddingRight = 30;
-                var chartW = rect.width - paddingLeft - paddingRight;
-                var count = lastTimelineData.labels.length;
-                var stepX = count > 1 ? chartW / (count - 1) : chartW;
+            // 映射到 SVG 坐标 (0 ~ 1000)
+            var svgX = (mouseX / width) * 1000;
 
-                var rawIdx = Math.round((mouseX - paddingLeft) / stepX);
-                var idx = Math.max(0, Math.min(count - 1, rawIdx));
+            var paddingLeft = 65;
+            var paddingRight = 45;
+            var chartW = 1000 - paddingLeft - paddingRight;
+            var count = lastTimelineData.labels.length;
+            var stepX = count > 1 ? chartW / (count - 1) : chartW;
 
+            var rawIdx = Math.round((svgX - paddingLeft) / stepX);
+            var idx = Math.max(0, Math.min(count - 1, rawIdx));
+
+            if (hoveredIndex !== idx) {
                 hoveredIndex = idx;
                 renderTimelineChart(lastTimelineData);
+            }
 
-                // 更新 Tooltip 内容
-                var dateLabel = lastTimelineData.labels[idx];
-                var pvVal = lastTimelineData.pv[idx] || 0;
-                var uvVal = lastTimelineData.uv[idx] || 0;
-                var sesVal = lastTimelineData.sessions[idx] || 0;
+            // 更新 Tooltip 内容
+            var dateLabel = lastTimelineData.labels[idx];
+            var pvVal = lastTimelineData.pv[idx] || 0;
+            var uvVal = lastTimelineData.uv[idx] || 0;
+            var sesVal = lastTimelineData.sessions[idx] || 0;
 
-                var tooltipHtml = '<div class="wpfa-tt-head">' + escapeHtml(dateLabel) + '</div>';
-                if (activeMetrics.pv) {
-                    tooltipHtml += '<div class="wpfa-tt-row"><span class="wpfa-tt-dot" style="background:#3b82f6;"></span> 浏览量 (PV): <strong>' + formatNumber(pvVal) + '</strong></div>';
-                }
-                if (activeMetrics.uv) {
-                    tooltipHtml += '<div class="wpfa-tt-row"><span class="wpfa-tt-dot" style="background:#10b981;"></span> 独立访客 (UV): <strong>' + formatNumber(uvVal) + '</strong></div>';
-                }
-                if (activeMetrics.sessions) {
-                    tooltipHtml += '<div class="wpfa-tt-row"><span class="wpfa-tt-dot" style="background:#8b5cf6;"></span> 访问会话: <strong>' + formatNumber(sesVal) + '</strong></div>';
-                }
+            var tooltipHtml = '<div class="wpfa-tt-head">' + escapeHtml(dateLabel) + '</div>';
+            if (activeMetrics.pv) {
+                tooltipHtml += '<div class="wpfa-tt-row"><span class="wpfa-tt-dot" style="background:#2563eb;border-radius:50%;"></span> 浏览量 (PV): <strong>' + formatNumber(pvVal) + '</strong></div>';
+            }
+            if (activeMetrics.uv) {
+                tooltipHtml += '<div class="wpfa-tt-row"><span class="wpfa-tt-dot" style="background:#059669;transform:rotate(45deg);"></span> 独立访客 (UV): <strong>' + formatNumber(uvVal) + '</strong></div>';
+            }
+            if (activeMetrics.sessions) {
+                tooltipHtml += '<div class="wpfa-tt-row"><span class="wpfa-tt-dot" style="background:#7c3aed;border-radius:2px;"></span> 访问会话: <strong>' + formatNumber(sesVal) + '</strong></div>';
+            }
 
-                tooltip.html(tooltipHtml);
+            tooltip.html(tooltipHtml);
 
-                // 计算 Tooltip 坐标
-                var targetX = paddingLeft + idx * stepX;
-                var ttW = tooltip.outerWidth();
-                var ttLeft = targetX + 15;
-                if (ttLeft + ttW > rect.width) {
-                    ttLeft = targetX - ttW - 15;
-                }
+            var ttW = tooltip.outerWidth();
+            var posX = mouseX + 15;
+            if (posX + ttW > width - 10) {
+                posX = mouseX - ttW - 15;
+            }
 
-                tooltip.css({
-                    display: 'block',
-                    left: ttLeft + 'px',
-                    top: Math.max(15, Math.min(rect.height - 120, mouseY - 20)) + 'px'
-                });
+            tooltip.css({
+                display: 'block',
+                left: Math.max(10, posX) + 'px',
+                top: Math.max(10, Math.min(height - 120, mouseY - 20)) + 'px'
             });
+        });
 
-            wrapper.on('mouseleave', function() {
-                hoveredIndex = -1;
-                tooltip.hide();
-                if (lastTimelineData) {
-                    renderTimelineChart(lastTimelineData);
-                }
-            });
-        }
+        container.on('mouseleave', function() {
+            hoveredIndex = -1;
+            tooltip.hide();
+            if (lastTimelineData) {
+                renderTimelineChart(lastTimelineData);
+            }
+        });
     }
 
     /**
@@ -259,13 +260,12 @@
     }
 
     /**
-     * 极佳整步长计算 (Nice Scale)
+     * 优雅标尺刻度算法 (Nice Scale)
      */
     function calculateNiceScale(maxVal, ticksCount) {
         ticksCount = ticksCount || 4;
         if (maxVal <= 0) maxVal = 10;
-        var range = maxVal;
-        var roughStep = range / ticksCount;
+        var roughStep = maxVal / ticksCount;
         var stepPower = Math.pow(10, Math.floor(Math.log10(roughStep)));
         var normalizedStep = roughStep / stepPower;
 
@@ -284,37 +284,16 @@
     }
 
     /**
-     * 原生 Canvas 渲染高质感平滑时序趋势图 (PV / UV / Sessions)
+     * 自适应高质感 SVG 图表渲染核心 (彻底杜绝 300px 挤在左侧问题)
      */
     function renderTimelineChart(timeline) {
-        var canvas = document.getElementById('wpfa-trend-canvas');
-        if (!canvas) return;
+        var svg = document.getElementById('wpfa-trend-svg');
+        if (!svg) return;
 
-        var wrapper = document.getElementById('wpfa-canvas-wrapper');
-        if (!wrapper) return;
-
-        // 彻底解决宽度只有 300px 的问题：读取父容器真实像素宽度
-        var width = wrapper.clientWidth || wrapper.getBoundingClientRect().width || 800;
-        var height = 300;
-
-        var dpr = window.devicePixelRatio || 1;
-        canvas.width = Math.floor(width * dpr);
-        canvas.height = Math.floor(height * dpr);
-
-        canvas.style.width = width + 'px';
-        canvas.style.height = height + 'px';
-
-        var ctx = canvas.getContext('2d');
-        ctx.resetTransform && ctx.resetTransform();
-        ctx.scale(dpr, dpr);
-
-        ctx.clearRect(0, 0, width, height);
+        $(svg).empty();
 
         if (!timeline || !timeline.labels || timeline.labels.length === 0) {
-            ctx.fillStyle = '#9ca3af';
-            ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('该时间段内暂无访问数据', width / 2, height / 2);
+            svg.innerHTML = '<text x="500" y="160" fill="#94a3b8" font-size="14" text-anchor="middle">该时间段内暂无访问数据</text>';
             return;
         }
 
@@ -323,7 +302,7 @@
         var uv = timeline.uv || [];
         var sessions = timeline.sessions || [];
 
-        // 更新顶部图例的总和数值
+        // 更新顶部图例总数
         var sumPv = pv.reduce(function(a, b) { return a + b; }, 0);
         var sumUv = uv.reduce(function(a, b) { return a + b; }, 0);
         var sumSes = sessions.reduce(function(a, b) { return a + b; }, 0);
@@ -332,11 +311,14 @@
         $('#legend-uv-sum').text(formatNumber(sumUv));
         $('#legend-sessions-sum').text(formatNumber(sumSes));
 
-        var padding = { top: 30, right: 30, bottom: 40, left: 50 };
-        var chartW = width - padding.left - padding.right;
-        var chartH = height - padding.top - padding.bottom;
+        // SVG 坐标系参数：宽 1000, 高 320 (全宽自适应)
+        var totalW = 1000;
+        var totalH = 320;
+        var padding = { top: 35, right: 45, bottom: 45, left: 65 };
+        var chartW = totalW - padding.left - padding.right;
+        var chartH = totalH - padding.top - padding.bottom;
 
-        // 计算最大值 (仅统计激活的指标)
+        // 计算最大值 (仅统计开启的指标)
         var maxActiveVal = 0;
         if (activeMetrics.pv) maxActiveVal = Math.max(maxActiveVal, Math.max.apply(null, pv));
         if (activeMetrics.uv) maxActiveVal = Math.max(maxActiveVal, Math.max.apply(null, uv));
@@ -346,138 +328,176 @@
         var maxVal = scale.max;
         var stepVal = scale.step;
 
-        // 绘制水平背景网格线与 Y 轴刻度
-        ctx.lineWidth = 1;
-        ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        var html = '';
 
+        // 定义渐变色与滤镜
+        html += '<defs>';
+        html += '  <linearGradient id="pvGrad" x1="0%" y1="0%" x2="0%" y2="100%">';
+        html += '    <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22" />';
+        html += '    <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0" />';
+        html += '  </linearGradient>';
+        html += '  <linearGradient id="uvGrad" x1="0%" y1="0%" x2="0%" y2="100%">';
+        html += '    <stop offset="0%" stop-color="#059669" stop-opacity="0.18" />';
+        html += '    <stop offset="100%" stop-color="#059669" stop-opacity="0.0" />';
+        html += '  </linearGradient>';
+        html += '  <linearGradient id="sesGrad" x1="0%" y1="0%" x2="0%" y2="100%">';
+        html += '    <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.12" />';
+        html += '    <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.0" />';
+        html += '  </linearGradient>';
+        html += '  <filter id="nodeGlow" x="-50%" y="-50%" width="200%" height="200%">';
+        html += '    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.25" />';
+        html += '  </filter>';
+        html += '</defs>';
+
+        // 绘制水平背景网格线与 Y 轴刻度
         for (var val = 0; val <= maxVal; val += stepVal) {
             var y = padding.top + chartH - (val / maxVal) * chartH;
-            
-            // 网格横线
-            ctx.beginPath();
-            ctx.strokeStyle = (val === 0) ? '#e2e8f0' : '#f1f5f9';
-            ctx.moveTo(padding.left, y);
-            ctx.lineTo(width - padding.right, y);
-            ctx.stroke();
+            var strokeColor = (val === 0) ? '#cbd5e1' : '#f1f5f9';
+            var strokeWidth = (val === 0) ? '1.5' : '1';
 
-            // Y 轴文字
-            ctx.fillStyle = '#94a3b8';
-            ctx.textAlign = 'right';
-            ctx.fillText(formatNumber(val), padding.left - 12, y + 4);
+            html += '<line x1="' + padding.left + '" y1="' + y + '" x2="' + (totalW - padding.right) + '" y2="' + y + '" stroke="' + strokeColor + '" stroke-width="' + strokeWidth + '" />';
+            html += '<text x="' + (padding.left - 12) + '" y="' + (y + 4) + '" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="end">' + formatNumber(val) + '</text>';
         }
 
-        // 绘制 X 轴标签
         var count = labels.length;
         var stepX = count > 1 ? chartW / (count - 1) : chartW;
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#64748b';
 
-        var skip = 1;
-        if (chartW < 500 && count > 10) skip = 3;
-        else if (count > 20) skip = Math.ceil(count / 10);
-
+        // 绘制 X 轴刻度标签
         labels.forEach(function(lbl, idx) {
-            if (idx % skip === 0 || idx === count - 1) {
-                var x = padding.left + idx * stepX;
-                ctx.fillText(lbl, x, height - 12);
-            }
+            var x = padding.left + idx * stepX;
+            var isCurrentHover = (hoveredIndex === idx);
+            var textColor = isCurrentHover ? '#0f172a' : '#64748b';
+            var fontW = isCurrentHover ? 'bold' : 'normal';
+
+            html += '<text x="' + x + '" y="' + (totalH - 15) + '" fill="' + textColor + '" font-size="11" font-weight="' + fontW + '" font-family="sans-serif" text-anchor="middle">' + escapeHtml(lbl) + '</text>';
         });
 
-        // 绘制竖向交互标尺线
+        // 悬浮高亮竖向标尺线
         if (hoveredIndex >= 0 && hoveredIndex < count) {
-            var hoverX = padding.left + hoveredIndex * stepX;
-            ctx.save();
-            ctx.setLineDash([4, 4]);
-            ctx.strokeStyle = '#cbd5e1';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(hoverX, padding.top);
-            ctx.lineTo(hoverX, padding.top + chartH);
-            ctx.stroke();
-            ctx.restore();
+            var hx = padding.left + hoveredIndex * stepX;
+            html += '<line x1="' + hx + '" y1="' + padding.top + '" x2="' + hx + '" y2="' + (padding.top + chartH) + '" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.8" />';
         }
 
-        // 贝塞尔曲线平滑绘制函数
-        function drawCurve(dataArr, strokeColor, fillColor, isHighlighted) {
-            if (!dataArr || dataArr.length === 0) return;
-            var points = [];
-            dataArr.forEach(function(v, idx) {
-                var x = padding.left + idx * stepX;
-                var y = padding.top + chartH - (v / maxVal) * chartH;
-                points.push({ x: x, y: y, val: v });
-            });
+        // ======================= 渲染模式 1: 柱状图对比视图 =======================
+        if (currentChartType === 'bar') {
+            var barSlotW = stepX * 0.65;
+            var activeCount = (activeMetrics.pv ? 1 : 0) + (activeMetrics.uv ? 1 : 0) + (activeMetrics.sessions ? 1 : 0);
+            activeCount = Math.max(1, activeCount);
+            var subBarW = Math.max(6, (barSlotW / activeCount) - 3);
 
-            // 1. 绘制渐变区域填充
-            if (fillColor && points.length > 1) {
-                var grad = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartH);
-                grad.addColorStop(0, fillColor);
-                grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            labels.forEach(function(lbl, idx) {
+                var centerX = padding.left + idx * stepX;
+                var startX = centerX - (barSlotW / 2);
+                var curX = startX;
 
-                ctx.beginPath();
-                ctx.moveTo(points[0].x, points[0].y);
-                for (var j = 0; j < points.length - 1; j++) {
-                    var xc = (points[j].x + points[j + 1].x) / 2;
-                    var yc = (points[j].y + points[j + 1].y) / 2;
-                    ctx.quadraticCurveTo(points[j].x, points[j].y, xc, yc);
+                if (activeMetrics.pv) {
+                    var vPv = pv[idx] || 0;
+                    var bH = (vPv / maxVal) * chartH;
+                    var bY = padding.top + chartH - bH;
+                    html += '<rect x="' + curX + '" y="' + bY + '" width="' + subBarW + '" height="' + bH + '" rx="3" fill="#2563eb" opacity="' + (hoveredIndex === idx ? '1' : '0.85') + '" />';
+                    curX += subBarW + 3;
                 }
-                ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-                ctx.lineTo(points[points.length - 1].x, padding.top + chartH);
-                ctx.lineTo(points[0].x, padding.top + chartH);
-                ctx.closePath();
-                ctx.fillStyle = grad;
-                ctx.fill();
-            }
-
-            // 2. 绘制平滑主线条
-            ctx.beginPath();
-            ctx.strokeStyle = strokeColor;
-            ctx.lineWidth = 2.5;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            ctx.moveTo(points[0].x, points[0].y);
-            for (var k = 0; k < points.length - 1; k++) {
-                var xMid = (points[k].x + points[k + 1].x) / 2;
-                var yMid = (points[k].y + points[k + 1].y) / 2;
-                ctx.quadraticCurveTo(points[k].x, points[k].y, xMid, yMid);
-            }
-            ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-            ctx.stroke();
-
-            // 3. 绘制数据节点圆点
-            points.forEach(function(pt, pIdx) {
-                var isNodeHover = (hoveredIndex === pIdx);
-                ctx.beginPath();
-                ctx.arc(pt.x, pt.y, isNodeHover ? 5.5 : 3.5, 0, Math.PI * 2);
-                ctx.fillStyle = '#ffffff';
-                ctx.fill();
-                ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = isNodeHover ? 3 : 2;
-                ctx.stroke();
-
-                if (isNodeHover) {
-                    // 外层光晕
-                    ctx.beginPath();
-                    ctx.arc(pt.x, pt.y, 9, 0, Math.PI * 2);
-                    ctx.strokeStyle = strokeColor;
-                    ctx.globalAlpha = 0.3;
-                    ctx.lineWidth = 4;
-                    ctx.stroke();
-                    ctx.globalAlpha = 1.0;
+                if (activeMetrics.uv) {
+                    var vUv = uv[idx] || 0;
+                    var bH2 = (vUv / maxVal) * chartH;
+                    var bY2 = padding.top + chartH - bH2;
+                    html += '<rect x="' + curX + '" y="' + bY2 + '" width="' + subBarW + '" height="' + bH2 + '" rx="3" fill="#059669" opacity="' + (hoveredIndex === idx ? '1' : '0.85') + '" />';
+                    curX += subBarW + 3;
+                }
+                if (activeMetrics.sessions) {
+                    var vSes = sessions[idx] || 0;
+                    var bH3 = (vSes / maxVal) * chartH;
+                    var bY3 = padding.top + chartH - bH3;
+                    html += '<rect x="' + curX + '" y="' + bY3 + '" width="' + subBarW + '" height="' + bH3 + '" rx="3" fill="#7c3aed" opacity="' + (hoveredIndex === idx ? '1' : '0.85') + '" />';
                 }
             });
         }
+        // ======================= 渲染模式 2: 平滑折线与多形状区分视图 =======================
+        else {
+            // 折线辅助函数
+            function buildCurvePath(dataArr) {
+                var pts = [];
+                dataArr.forEach(function(v, idx) {
+                    var x = padding.left + idx * stepX;
+                    var y = padding.top + chartH - (v / maxVal) * chartH;
+                    pts.push({ x: x, y: y, val: v });
+                });
 
-        // 按层次绘制开启的折线
-        if (activeMetrics.sessions) {
-            drawCurve(sessions, '#8b5cf6', 'rgba(139, 92, 246, 0.08)');
+                if (pts.length === 0) return { path: '', area: '', pts: [] };
+
+                var pStr = 'M ' + pts[0].x + ' ' + pts[0].y;
+                for (var j = 0; j < pts.length - 1; j++) {
+                    var xMid = (pts[j].x + pts[j + 1].x) / 2;
+                    var yMid = (pts[j].y + pts[j + 1].y) / 2;
+                    pStr += ' Q ' + pts[j].x + ' ' + pts[j].y + ', ' + xMid + ' ' + yMid;
+                }
+                pStr += ' T ' + pts[pts.length - 1].x + ' ' + pts[pts.length - 1].y;
+
+                var areaStr = pStr + ' L ' + pts[pts.length - 1].x + ' ' + (padding.top + chartH) + ' L ' + pts[0].x + ' ' + (padding.top + chartH) + ' Z';
+                return { path: pStr, area: areaStr, pts: pts };
+            }
+
+            // 1. 访问会话 (Sessions) - 紫色虚线 + 正方形标记 ■
+            if (activeMetrics.sessions) {
+                var sesData = buildCurvePath(sessions);
+                if (sesData.path) {
+                    html += '<path d="' + sesData.area + '" fill="url(#sesGrad)" />';
+                    html += '<path d="' + sesData.path + '" fill="none" stroke="#7c3aed" stroke-width="2.5" stroke-dasharray="6,4" stroke-linecap="round" />';
+
+                    sesData.pts.forEach(function(pt, pIdx) {
+                        var isHov = (hoveredIndex === pIdx);
+                        var sSize = isHov ? 10 : 7;
+                        var half = sSize / 2;
+                        html += '<rect x="' + (pt.x - half) + '" y="' + (pt.y - half) + '" width="' + sSize + '" height="' + sSize + '" fill="#ffffff" stroke="#7c3aed" stroke-width="' + (isHov ? 3 : 2) + '" rx="1.5" filter="url(#nodeGlow)" />';
+                    });
+                }
+            }
+
+            // 2. 独立访客 (UV) - 翡翠绿实线 + 菱形标记 ◆
+            if (activeMetrics.uv) {
+                var uvData = buildCurvePath(uv);
+                if (uvData.path) {
+                    html += '<path d="' + uvData.area + '" fill="url(#uvGrad)" />';
+                    html += '<path d="' + uvData.path + '" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round" />';
+
+                    uvData.pts.forEach(function(pt, pIdx) {
+                        var isHov = (hoveredIndex === pIdx);
+                        var dRadius = isHov ? 6.5 : 4.5;
+                        // 绘制旋转 45 度的菱形
+                        var diamondPath = 'M ' + pt.x + ' ' + (pt.y - dRadius) +
+                                          ' L ' + (pt.x + dRadius) + ' ' + pt.y +
+                                          ' L ' + pt.x + ' ' + (pt.y + dRadius) +
+                                          ' L ' + (pt.x - dRadius) + ' ' + pt.y + ' Z';
+                        html += '<path d="' + diamondPath + '" fill="#ffffff" stroke="#059669" stroke-width="' + (isHov ? 3 : 2) + '" filter="url(#nodeGlow)" />';
+                    });
+                }
+            }
+
+            // 3. 浏览量 (PV) - 亮蓝实线 + 圆形标记 🔵
+            if (activeMetrics.pv) {
+                var pvData = buildCurvePath(pv);
+                if (pvData.path) {
+                    html += '<path d="' + pvData.area + '" fill="url(#pvGrad)" />';
+                    html += '<path d="' + pvData.path + '" fill="none" stroke="#2563eb" stroke-width="3.5" stroke-linecap="round" />';
+
+                    pvData.pts.forEach(function(pt, pIdx) {
+                        var isHov = (hoveredIndex === pIdx);
+                        var r = isHov ? 6 : 4;
+                        html += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="' + r + '" fill="#ffffff" stroke="#2563eb" stroke-width="' + (isHov ? 3.5 : 2.5) + '" filter="url(#nodeGlow)" />';
+
+                        // 若数值大于 0，节点上方展示微型胶囊数字标签
+                        if (pt.val > 0) {
+                            html += '<g>';
+                            html += '<rect x="' + (pt.x - 12) + '" y="' + (pt.y - 24) + '" width="24" height="15" rx="3" fill="#2563eb" opacity="0.9" />';
+                            html += '<text x="' + pt.x + '" y="' + (pt.y - 13) + '" fill="#ffffff" font-size="10" font-weight="bold" font-family="sans-serif" text-anchor="middle">' + pt.val + '</text>';
+                            html += '</g>';
+                        }
+                    });
+                }
+            }
         }
-        if (activeMetrics.pv) {
-            drawCurve(pv, '#3b82f6', 'rgba(59, 130, 246, 0.16)');
-        }
-        if (activeMetrics.uv) {
-            drawCurve(uv, '#10b981', 'rgba(16, 185, 129, 0.12)');
-        }
+
+        svg.innerHTML = html;
     }
 
     /**
@@ -626,7 +646,6 @@
         devContainer.empty();
         countryContainer.empty();
 
-        // 设备
         var totalDev = 0;
         (data.devices || []).forEach(function(d) { totalDev += parseInt(d.sessions, 10); });
 
@@ -646,7 +665,6 @@
             );
         });
 
-        // 国家
         var totalCount = 0;
         (data.countries || []).forEach(function(c) { totalCount += parseInt(c.sessions, 10); });
 
@@ -913,7 +931,6 @@
         });
     }
 
-    // 格式化数字
     function formatNumber(num, decimals) {
         if (num === null || num === undefined) return '0';
         var n = parseFloat(num);
@@ -924,7 +941,6 @@
         });
     }
 
-    // 转义 HTML
     function escapeHtml(str) {
         if (!str) return '';
         return String(str)

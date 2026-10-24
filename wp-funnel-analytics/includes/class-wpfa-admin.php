@@ -77,20 +77,23 @@ class WPFA_Admin {
             return;
         }
 
-        $version = get_option('wpfa_db_version', '1.0.0');
+        $css_file = dirname(__DIR__) . '/assets/css/admin-dashboard.css';
+        $js_file  = dirname(__DIR__) . '/assets/js/admin-dashboard.js';
+        $css_ver  = file_exists($css_file) ? filemtime($css_file) : '1.0.1';
+        $js_ver   = file_exists($js_file) ? filemtime($js_file) : '1.0.1';
 
         wp_enqueue_style(
             'wpfa-admin-css',
             plugins_url('assets/css/admin-dashboard.css', dirname(__FILE__)),
             [],
-            $version
+            $css_ver
         );
 
         wp_enqueue_script(
             'wpfa-admin-js',
             plugins_url('assets/js/admin-dashboard.js', dirname(__FILE__)),
             ['jquery'],
-            $version,
+            $js_ver,
             true
         );
 
@@ -457,7 +460,7 @@ class WPFA_Admin {
                 </div>
             </div>
 
-            <!-- 时序趋势折线图 (Trend Timeline) -->
+            <!-- 时序趋势图 (Trend Timeline) -->
             <div class="wpfa-panel wpfa-panel-trend">
                 <div class="wpfa-panel-header">
                     <div class="wpfa-panel-title-group">
@@ -465,29 +468,47 @@ class WPFA_Admin {
                             <span class="dashicons dashicons-chart-area"></span>
                             流量与访问趋势图 (Traffic & Engagement Timeline)
                         </h2>
-                        <span class="wpfa-panel-subtitle">全站流量走势 · 支持移动悬停查看详细指标</span>
+                        <span class="wpfa-panel-subtitle">多维全站指标全景走势 · 鼠标悬停查看详细数据对比</span>
                     </div>
-                    <div class="wpfa-chart-legend" id="wpfa-chart-legend">
-                        <button type="button" class="wpfa-legend-btn active" data-metric="pv">
-                            <i style="background:#3b82f6;"></i>
-                            <span>浏览量 (PV)</span>
-                            <strong id="legend-pv-sum">-</strong>
-                        </button>
-                        <button type="button" class="wpfa-legend-btn active" data-metric="uv">
-                            <i style="background:#10b981;"></i>
-                            <span>独立访客 (UV)</span>
-                            <strong id="legend-uv-sum">-</strong>
-                        </button>
-                        <button type="button" class="wpfa-legend-btn active" data-metric="sessions">
-                            <i style="background:#8b5cf6;"></i>
-                            <span>访问会话</span>
-                            <strong id="legend-sessions-sum">-</strong>
-                        </button>
+
+                    <div class="wpfa-chart-actions">
+                        <!-- 图表类型切换 -->
+                        <div class="wpfa-view-toggle">
+                            <button type="button" class="wpfa-toggle-btn active" data-chart-type="line" title="折线面积趋势">
+                                <span class="dashicons dashicons-chart-line"></span> 曲线图
+                            </button>
+                            <button type="button" class="wpfa-toggle-btn" data-chart-type="bar" title="指标对比柱状图">
+                                <span class="dashicons dashicons-chart-bar"></span> 柱状图
+                            </button>
+                        </div>
+
+                        <!-- 交互指标图例与快速开关 -->
+                        <div class="wpfa-chart-legend" id="wpfa-chart-legend">
+                            <button type="button" class="wpfa-legend-btn active" data-metric="pv" title="点击显示/隐藏浏览量">
+                                <span class="wpfa-marker-circle"></span>
+                                <span class="wpfa-legend-text">浏览量 (PV)</span>
+                                <strong id="legend-pv-sum" class="wpfa-legend-val">-</strong>
+                            </button>
+                            <button type="button" class="wpfa-legend-btn active" data-metric="uv" title="点击显示/隐藏独立访客">
+                                <span class="wpfa-marker-diamond"></span>
+                                <span class="wpfa-legend-text">独立访客 (UV)</span>
+                                <strong id="legend-uv-sum" class="wpfa-legend-val">-</strong>
+                            </button>
+                            <button type="button" class="wpfa-legend-btn active" data-metric="sessions" title="点击显示/隐藏访问会话">
+                                <span class="wpfa-marker-dashed"></span>
+                                <span class="wpfa-legend-text">访问会话</span>
+                                <strong id="legend-sessions-sum" class="wpfa-legend-val">-</strong>
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div class="wpfa-panel-body" style="padding: 20px 24px 28px 24px;">
-                    <div class="wpfa-canvas-wrapper" id="wpfa-canvas-wrapper">
-                        <canvas id="wpfa-trend-canvas"></canvas>
+
+                <div class="wpfa-panel-body" style="padding: 20px 24px 24px 24px;">
+                    <!-- 自适应全宽 SVG 图表渲染容器 -->
+                    <div class="wpfa-svg-chart-container" id="wpfa-svg-chart-container">
+                        <svg id="wpfa-trend-svg" class="wpfa-trend-svg" viewBox="0 0 1000 320" preserveAspectRatio="none">
+                            <!-- 动态生成 SVG 元素 -->
+                        </svg>
                         <!-- 悬浮交互 Tooltip -->
                         <div id="wpfa-chart-tooltip" class="wpfa-chart-tooltip"></div>
                     </div>
