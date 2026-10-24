@@ -108,7 +108,7 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
                 }
             }
 
-            // 2. 兜底容错：直接读取 Git Tags 并使用标准英文直链 Raw ZIP
+            // 2. 兜底容错 1：直接读取 Git Tags 并使用标准英文直链 Raw ZIP
             $tags_url = 'https://api.github.com/repos/' . $this->github_repo . '/tags';
             $tags_response = wp_remote_get($tags_url, $headers);
 
@@ -137,6 +137,28 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
                     ];
                     set_transient($transient_key, $data, 1 * HOUR_IN_SECONDS);
                     return $data;
+                }
+            }
+
+            // 3. 兜底容错 2 (免 API 限流 / 国内加速 CDN)：jsDelivr 全球加速源
+            $cdn_url = 'https://cdn.jsdelivr.net/gh/' . $this->github_repo . '@main/version.json';
+            $cdn_response = wp_remote_get($cdn_url, ['timeout' => 8, 'user-agent' => 'WordPress/' . get_bloginfo('version')]);
+            if (!is_wp_error($cdn_response) && wp_remote_retrieve_response_code($cdn_response) === 200) {
+                $cdn_data = json_decode(wp_remote_retrieve_body($cdn_response), true);
+                if (is_array($cdn_data) && !empty($cdn_data['tag_name'])) {
+                    set_transient($transient_key, $cdn_data, 1 * HOUR_IN_SECONDS);
+                    return $cdn_data;
+                }
+            }
+
+            // 4. 兜底容错 3：GitHub Raw 直链
+            $raw_url = 'https://raw.githubusercontent.com/' . $this->github_repo . '/main/version.json';
+            $raw_response = wp_remote_get($raw_url, ['timeout' => 8, 'user-agent' => 'WordPress/' . get_bloginfo('version')]);
+            if (!is_wp_error($raw_response) && wp_remote_retrieve_response_code($raw_response) === 200) {
+                $raw_data = json_decode(wp_remote_retrieve_body($raw_response), true);
+                if (is_array($raw_data) && !empty($raw_data['tag_name'])) {
+                    set_transient($transient_key, $raw_data, 1 * HOUR_IN_SECONDS);
+                    return $raw_data;
                 }
             }
 
@@ -227,35 +249,73 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
                 $transient_key = 'wpgh_update_' . md5($this->github_repo . '_' . $this->slug);
                 delete_transient($transient_key);
 
-                // 强制从 GitHub 获取最新 Release 信息
+                // 强制从远程多源获取最新 Release 信息
                 $release = $this->get_release_info(true);
 
-                // 立即更新 WordPress 的核心 update_plugins 瞬态，确保重定向回列表后立即显示黄色更新条
-                $current = get_site_transient('update_plugins');
-                if (!is_object($current)) {
-                    $current = new stdClass();
-                }
-                if (!isset($current->response)) {
-                    $current->response = [];
-                }
-                if (!isset($current->checked)) {
-                    $current->checked = [];
-                }
-                $current->checked[$this->plugin_basename] = $this->version;
+                $status = 'error';
+                $new_version = '';
 
-                // 触发比对并写入
-                $current = $this->check_update($current);
-                set_site_transient('update_plugins', $current);
+                if ($release && !empty($release['tag_name'])) {
+                    $new_version = ltrim($release['tag_name'], 'vV');
+                    if (version_compare($new_version, $this->version, '>')) {
+                        $status = 'update_available';
 
-                wp_safe_redirect(admin_url('plugins.php?wpgh_checked=1&plugin=' . urlencode($this->slug)));
+                        // 立即更新 WordPress 的核心 update_plugins 瞬态，确保重定向回列表后立即显示黄色更新条
+                        $current = get_site_transient('update_plugins');
+                        if (!is_object($current)) {
+                            $current = new stdClass();
+                        }
+                        if (!isset($current->response)) {
+                            $current->response = [];
+                        }
+                        if (!isset($current->checked)) {
+                            $current->checked = [];
+                        }
+                        $current->checked[$this->plugin_basename] = $this->version;
+
+                        // 触发比对并写入
+                        $current = $this->check_update($current);
+                        set_site_transient('update_plugins', $current);
+                    } else {
+                        $status = 'latest';
+                    }
+                }
+
+                $redirect_url = add_query_arg([
+                    'wpgh_checked' => 1,
+                    'wpgh_slug'    => $this->slug,
+                    'wpgh_status'  => $status,
+                    'wpgh_ver'     => $new_version ?: $this->version,
+                ], admin_url('plugins.php'));
+
+                wp_safe_redirect($redirect_url);
                 exit;
             }
 
-            if (isset($_GET['wpgh_checked']) && isset($_GET['plugin']) && $_GET['plugin'] === $this->slug) {
-                add_action('admin_notices', function () {
-                    echo '<div class="notice notice-success is-dismissible"><p>' .
-                        esc_html__('已成功检查 GitHub 远程最新版本！若有可用更新，下方已显示升级提示条。', 'default') .
-                        '</p></div>';
+            if (isset($_GET['wpgh_checked']) && isset($_GET['wpgh_slug']) && $_GET['wpgh_slug'] === $this->slug) {
+                $status = sanitize_key($_GET['wpgh_status'] ?? '');
+                $ver    = sanitize_text_field($_GET['wpgh_ver'] ?? '');
+
+                add_action('admin_notices', function () use ($status, $ver) {
+                    if ($status === 'update_available') {
+                        echo '<div class="notice notice-warning is-dismissible" style="border-left-color: #2563eb; background:#eff6ff;"><p>' .
+                            sprintf(
+                                '🚀 <strong>【WP Funnel Analytics】检测到远程新版本 v%s！</strong>下方列表中已出现黄色升级提示，请点击“<strong>现在更新</strong>”一键升级。',
+                                esc_html($ver)
+                            ) .
+                            '</p></div>';
+                    } elseif ($status === 'latest') {
+                        echo '<div class="notice notice-success is-dismissible"><p>' .
+                            sprintf(
+                                '✓ <strong>【WP Funnel Analytics】已是最新版本 (v%s)</strong>，无需更新。',
+                                esc_html($ver)
+                            ) .
+                            '</p></div>';
+                    } else {
+                        echo '<div class="notice notice-error is-dismissible"><p>' .
+                            '⚠️ <strong>【WP Funnel Analytics】检查更新失败：</strong>服务器连接 GitHub API 超时或被防火墙拦截。若服务器网络受限，可直接在【插件 -> 安装插件 -> 上传插件】上传最新 ZIP 包覆盖升级。' .
+                            '</p></div>';
+                    }
                 });
             }
         }
