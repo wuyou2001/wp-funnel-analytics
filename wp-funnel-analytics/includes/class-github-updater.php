@@ -226,8 +226,26 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
 
                 $transient_key = 'wpgh_update_' . md5($this->github_repo . '_' . $this->slug);
                 delete_transient($transient_key);
-                delete_site_transient('update_plugins');
-                $this->get_release_info(true);
+
+                // 强制从 GitHub 获取最新 Release 信息
+                $release = $this->get_release_info(true);
+
+                // 立即更新 WordPress 的核心 update_plugins 瞬态，确保重定向回列表后立即显示黄色更新条
+                $current = get_site_transient('update_plugins');
+                if (!is_object($current)) {
+                    $current = new stdClass();
+                }
+                if (!isset($current->response)) {
+                    $current->response = [];
+                }
+                if (!isset($current->checked)) {
+                    $current->checked = [];
+                }
+                $current->checked[$this->plugin_basename] = $this->version;
+
+                // 触发比对并写入
+                $current = $this->check_update($current);
+                set_site_transient('update_plugins', $current);
 
                 wp_safe_redirect(admin_url('plugins.php?wpgh_checked=1&plugin=' . urlencode($this->slug)));
                 exit;
@@ -236,7 +254,7 @@ if (!class_exists('WP_GitHub_Plugin_Updater')) {
             if (isset($_GET['wpgh_checked']) && isset($_GET['plugin']) && $_GET['plugin'] === $this->slug) {
                 add_action('admin_notices', function () {
                     echo '<div class="notice notice-success is-dismissible"><p>' .
-                        esc_html__('已成功检查 GitHub 远程最新版本！如有更新，下方已显示升级提示。', 'default') .
+                        esc_html__('已成功检查 GitHub 远程最新版本！若有可用更新，下方已显示升级提示条。', 'default') .
                         '</p></div>';
                 });
             }

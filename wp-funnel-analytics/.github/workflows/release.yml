@@ -35,3 +35,15 @@ jobs:
             ${{ env.ZIP_NAME }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete Older Releases (Keep Only Latest)
+        run: |
+          echo "正在检查并删除旧版本发行版，仅保留最新发布的 ${{ env.TAG_NAME }}..."
+          gh release list --limit 100 --json tagName | jq -r '.[].tagName' | while read -r tag; do
+            if [ -n "$tag" ] && [ "$tag" != "${{ env.TAG_NAME }}" ]; then
+              echo ">>> 删除旧 Release: $tag"
+              gh release delete "$tag" --yes || true
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
