@@ -1,0 +1,923 @@
+/**
+ * WP Funnel Analytics - Modern SaaS Dashboard CSS
+ * High-End UI, Fluid Layout, Crisp Typography, Smooth Canvas Support
+ */
+
+:root {
+    --wpfa-primary: #3b82f6;
+    --wpfa-primary-hover: #2563eb;
+    --wpfa-success: #10b981;
+    --wpfa-warning: #f59e0b;
+    --wpfa-danger: #ef4444;
+    --wpfa-purple: #8b5cf6;
+    --wpfa-bg-card: #ffffff;
+    --wpfa-border: #e2e8f0;
+    --wpfa-text-main: #0f172a;
+    --wpfa-text-muted: #64748b;
+    --wpfa-radius: 12px;
+    --wpfa-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --wpfa-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+}
+
+.wpfa-wrap {
+    margin: 20px 20px 40px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    color: var(--wpfa-text-main);
+    box-sizing: border-box;
+}
+
+.wpfa-wrap * {
+    box-sizing: border-box;
+}
+
+/* 顶部头栏 */
+.wpfa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 20px 24px;
+    border-radius: var(--wpfa-radius);
+    box-shadow: var(--wpfa-shadow);
+    margin-bottom: 20px;
+    border: 1px solid var(--wpfa-border);
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.wpfa-header-title h1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: #0f172a;
+}
+
+.wpfa-logo-icon {
+    font-size: 26px;
+    width: 26px;
+    height: 26px;
+    color: var(--wpfa-primary);
+}
+
+.wpfa-badge-pro {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    vertical-align: middle;
+    letter-spacing: 0.3px;
+}
+
+.wpfa-subtitle {
+    margin: 0;
+    color: var(--wpfa-text-muted);
+    font-size: 13px;
+}
+
+.wpfa-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+/* 实时活跃气泡 */
+.wpfa-realtime-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+}
+
+.wpfa-pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--wpfa-success);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: wpfa-pulse 2s infinite;
+}
+
+@keyframes wpfa-pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.wpfa-realtime-label {
+    color: #065f46;
+    font-weight: 500;
+}
+
+.wpfa-rt-num {
+    color: #047857;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/* 时间切换按钮组 */
+.wpfa-date-filter-group {
+    display: flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.wpfa-date-btn {
+    border: none;
+    background: transparent;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.wpfa-date-btn:hover {
+    color: var(--wpfa-primary);
+}
+
+.wpfa-date-btn.active {
+    background: #ffffff;
+    color: var(--wpfa-primary);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.wpfa-btn-action {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    height: 32px !important;
+    line-height: 30px !important;
+    border-radius: 6px !important;
+    font-size: 13px !important;
+}
+
+/* 加载覆盖遮罩 */
+.wpfa-loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(2px);
+    z-index: 99999;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpfa-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: var(--wpfa-primary);
+    border-radius: 50%;
+    animation: wpfa-spin 0.8s linear infinite;
+}
+
+@keyframes wpfa-spin {
+    to { transform: rotate(360deg); }
+}
+
+.wpfa-loading-text {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+}
+
+/* KPI 卡片网格 */
+.wpfa-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 1400px) {
+    .wpfa-kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .wpfa-kpi-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.wpfa-kpi-card {
+    background: var(--wpfa-bg-card);
+    border: 1px solid var(--wpfa-border);
+    border-radius: var(--wpfa-radius);
+    padding: 18px 20px;
+    box-shadow: var(--wpfa-shadow);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.wpfa-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--wpfa-shadow-hover);
+}
+
+.wpfa-kpi-highlight {
+    background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%);
+    border-color: #bfdbfe;
+}
+
+.wpfa-kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.wpfa-kpi-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--wpfa-text-muted);
+}
+
+.wpfa-kpi-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #94a3b8;
+}
+
+.wpfa-kpi-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.wpfa-kpi-subval {
+    font-size: 13px;
+    color: var(--wpfa-success);
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.wpfa-kpi-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--wpfa-text-muted);
+}
+
+.wpfa-trend {
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.trend-up { color: #10b981; }
+.trend-down { color: #ef4444; }
+.trend-neutral { color: #64748b; }
+
+/* 通用面板 Panel */
+.wpfa-panel {
+    background: var(--wpfa-bg-card);
+    border: 1px solid var(--wpfa-border);
+    border-radius: var(--wpfa-radius);
+    box-shadow: var(--wpfa-shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.wpfa-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--wpfa-border);
+    background: #fafafa;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.wpfa-panel-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.wpfa-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0;
+    color: #0f172a;
+}
+
+.wpfa-panel-title .dashicons {
+    color: var(--wpfa-primary);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.wpfa-panel-subtitle {
+    font-size: 12px;
+    color: var(--wpfa-text-muted);
+}
+
+.wpfa-panel-body {
+    padding: 20px;
+}
+
+/* 核心漏斗视觉 */
+.wpfa-panel-funnel {
+    border-top: 3px solid var(--wpfa-primary);
+}
+
+.wpfa-funnel-switcher {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #475569;
+}
+
+.wpfa-select {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--wpfa-border);
+    background: #ffffff;
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.wpfa-funnel-steps-grid {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 6px 0;
+}
+
+.wpfa-funnel-col {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 180px;
+}
+
+.wpfa-funnel-card {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: all 0.15s ease;
+}
+
+.wpfa-funnel-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.wpfa-funnel-card-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.wpfa-step-badge {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.2px;
+}
+
+.wpfa-step-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wpfa-funnel-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+}
+
+.wpfa-funnel-count small {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--wpfa-text-muted);
+}
+
+.wpfa-funnel-bar-track {
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.wpfa-funnel-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease;
+}
+
+.step-fill-1 { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.step-fill-2 { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+.step-fill-3 { background: linear-gradient(90deg, #ec4899, #f472b6); }
+.step-fill-4 { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.step-fill-5 { background: linear-gradient(90deg, #10b981, #34d399); }
+
+.wpfa-funnel-meta {
+    font-size: 11px;
+    color: var(--wpfa-text-muted);
+    line-height: 1.6;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* 步骤流转指示 */
+.wpfa-funnel-transition {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    min-width: 80px;
+}
+
+.wpfa-transition-arrow {
+    font-size: 18px;
+    color: #cbd5e1;
+    margin-bottom: 2px;
+}
+
+.wpfa-drop-badge {
+    background: #fef2f2;
+    border: 1px solid #fee2e2;
+    color: #dc2626;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 6px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.wpfa-drop-badge small {
+    display: block;
+    color: #991b1b;
+    font-weight: 400;
+    margin-top: 1px;
+}
+
+/* 趋势图面板与全宽 Canvas 渲染核心 */
+.wpfa-panel-trend {
+    overflow: visible;
+}
+
+.wpfa-chart-legend {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.wpfa-legend-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.wpfa-legend-btn:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.wpfa-legend-btn i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.wpfa-legend-btn strong {
+    font-size: 11px;
+    color: #0f172a;
+    margin-left: 2px;
+    font-variant-numeric: tabular-nums;
+}
+
+.wpfa-legend-btn:not(.active) {
+    opacity: 0.45;
+    background: #f8fafc;
+    border-style: dashed;
+}
+
+.wpfa-legend-btn:not(.active) span,
+.wpfa-legend-btn:not(.active) strong {
+    text-decoration: line-through;
+}
+
+/* 彻底解决 300px 限制的 Canvas 容器 */
+.wpfa-canvas-wrapper {
+    position: relative;
+    width: 100% !important;
+    height: 300px !important;
+    min-height: 300px;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: crosshair;
+}
+
+#wpfa-trend-canvas {
+    display: block;
+    width: 100% !important;
+    height: 300px !important;
+}
+
+/* 悬浮交互 Tooltip */
+.wpfa-chart-tooltip {
+    display: none;
+    position: absolute;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    z-index: 50;
+    pointer-events: none;
+    white-space: nowrap;
+    transition: left 0.06s ease-out, top 0.06s ease-out;
+}
+
+.wpfa-tt-head {
+    font-weight: 700;
+    color: #1e293b;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+}
+
+.wpfa-tt-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.wpfa-tt-row:last-child {
+    margin-bottom: 0;
+}
+
+.wpfa-tt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.wpfa-tt-row strong {
+    color: #0f172a;
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+}
+
+/* 双列网格 */
+.wpfa-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 1024px) {
+    .wpfa-grid-2col {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* 列表容器 */
+.wpfa-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.wpfa-row-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.wpfa-row-item:hover {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+.wpfa-row-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+    padding-right: 12px;
+}
+
+.wpfa-row-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.wpfa-row-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.wpfa-row-title a:hover {
+    color: var(--wpfa-primary);
+}
+
+.wpfa-row-sub {
+    font-size: 11px;
+    color: var(--wpfa-text-muted);
+}
+
+.wpfa-row-stats {
+    text-align: right;
+    font-size: 13px;
+    color: #0f172a;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.wpfa-row-stats small {
+    display: block;
+    font-size: 11px;
+    color: var(--wpfa-text-muted);
+}
+
+/* 进度条组 */
+.wpfa-device-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .wpfa-device-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.wpfa-sub-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    margin: 0 0 12px 0;
+}
+
+.wpfa-progress-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.wpfa-prog-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.wpfa-prog-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #334155;
+    font-weight: 500;
+}
+
+.wpfa-prog-labels span:last-child {
+    font-variant-numeric: tabular-nums;
+    color: var(--wpfa-text-muted);
+}
+
+.wpfa-prog-track {
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.wpfa-prog-fill {
+    height: 100%;
+    background: var(--wpfa-primary);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* 实时动态流 */
+.wpfa-feed-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.wpfa-feed-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+.wpfa-feed-time {
+    font-size: 11px;
+    color: var(--wpfa-text-muted);
+    min-width: 55px;
+    font-variant-numeric: tabular-nums;
+}
+
+.wpfa-feed-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.badge-general { background: #e0f2fe; color: #0369a1; }
+.badge-primary { background: #ede9fe; color: #6d28d9; }
+.badge-success { background: #dcfce7; color: #15803d; }
+.badge-warning { background: #fef3c7; color: #b45309; }
+
+.wpfa-feed-content {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.wpfa-feed-url {
+    font-size: 11px;
+    color: var(--wpfa-text-muted);
+    margin-left: 8px;
+}
+
+.wpfa-empty {
+    text-align: center;
+    padding: 28px;
+    color: var(--wpfa-text-muted);
+    font-size: 13px;
+}
+
+/* 漏斗标签 */
+.wpfa-steps-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.wpfa-step-tag {
+    background: #f1f5f9;
+    color: #334155;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* 弹窗 Modal */
+.wpfa-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpfa-modal-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.wpfa-modal-box {
+    position: relative;
+    background: #ffffff;
+    width: 600px;
+    max-width: 90%;
+    border-radius: var(--wpfa-radius);
+    padding: 24px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+}
+
+.wpfa-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--wpfa-border);
+    padding-bottom: 14px;
+    margin-bottom: 18px;
+}
+
+.wpfa-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+.wpfa-modal-close {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--wpfa-text-muted);
+}
+
+.wpfa-form-row {
+    margin-bottom: 16px;
+}
+
+.wpfa-form-row label {
+    display: block;
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #1e293b;
+}
+
+.wpfa-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--wpfa-border);
+}
